@@ -1,0 +1,19 @@
+{
+    "name": "zymanch/zbank",
+    "description": "zBank",
+    "version":"1.0-dev",
+
+    "require": {
+        "php": ">=5.3.2"
+
+    },
+
+    "autoload": {
+        "psr-4": {
+            "SF\\": "framework"
+        },
+        "classmap": [
+
+        ]
+    }
+}
