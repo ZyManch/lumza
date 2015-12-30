@@ -5,7 +5,7 @@
  * Date: 23.12.2015
  * Time: 15:50
  */
-namespace SF\Request;
+namespace LZ\Request;
 
 class Http extends Base {
 

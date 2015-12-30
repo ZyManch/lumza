@@ -5,7 +5,7 @@
  * Date: 23.12.2015
  * Time: 12:32
  */
-namespace SF\Exception;
+namespace LZ\Exception;
 
 class Listener extends \Exception {
 

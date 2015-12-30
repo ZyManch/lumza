@@ -5,7 +5,7 @@
  * Date: 23.12.2015
  * Time: 13:13
  */
-namespace SF\Listener;
+namespace LZ\Listener;
 
 abstract class Base {
 

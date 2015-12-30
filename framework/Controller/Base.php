@@ -5,11 +5,11 @@
  * Date: 23.12.2015
  * Time: 17:19
  */
-namespace SF\Controller;
+namespace LZ\Controller;
 
 abstract class Base  {
     
-    abstract function execute(\SF\Request\Base $request);
+    abstract function execute(\LZ\Request\Base $request);
     
     
     abstract function getRouteTree();

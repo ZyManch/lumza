@@ -5,10 +5,10 @@
  * Date: 23.12.2015
  * Time: 13:13
  */
-namespace SF\Listener;
+namespace LZ\Listener;
 
-use SF\Exception;
-use SF\Request;
+use LZ\Exception;
+use LZ\Request;
 
 class Http extends Base {
 
@@ -25,10 +25,10 @@ class Http extends Base {
             throw new Exception\Listener('Error start server');
         }
         $dns = $this->_getParsedDns();
-        if (socket_bind($sock, $dns['domain'], $dns['port']) < 0) {
+        if (!socket_bind($sock, $dns['domain'], $dns['port'])) {
             throw new Exception\Listener('Error bind socket to '.$dns['domain'].':'.$dns['port']);
         }
-        if (socket_listen($sock, $this->_maxClients) < 0) {
+        if (!socket_listen($sock, $this->_maxClients)) {
             throw new Exception\Listener('Error listed port');
         }
         $this->_socket = $sock;

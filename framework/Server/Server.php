@@ -5,26 +5,31 @@
  * Date: 23.12.2015
  * Time: 11:19
  */
-namespace SF\Server;
+namespace LZ\Server;
 
-use SF\Listener;
+use LZ\Application\Base;
+use LZ\Listener;
+use LZ\Thread\Manager;
 
 class Server {
 
     protected $_listener;
 
-    protected $_requests = array();
+    protected $_threadManager;
 
-    public function __construct(Listener\Base $listener) {
+    public function __construct(Listener\Base $listener, Manager $threadManager) {
         set_time_limit(0);
         ob_implicit_flush();
         $this->_listener = $listener;
+        $this->_threadManager = $threadManager;
     }
 
     public function run() {
         while(true) {
             if ($request = $this->_listener->getNewRequest()) {
-                $this->_requests[] = $request;
+                $app = new Base($request);
+                $thread = $this->_threadManager->getFreeThread();
+                $thread->addApplication($app);
             }
             $this->_listener->checkClosedRequests();
             sleep(1);
