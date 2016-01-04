@@ -7,12 +7,15 @@
  */
 namespace LZ\Thread;
 
+use \LZ\App;
+
 abstract class Base {
 
     protected $_manager;
 
     protected $_stopped = false;
 
+    /** @var App\Base[] */
     protected $_applications = array();
 
     public function __construct(Manager $manager) {
@@ -24,7 +27,7 @@ abstract class Base {
         $this->_stopped = true;
     }
 
-    public function addApplication($app) {
+    public function addApplication(App\Base $app) {
         $this->_applications[] = $app;
     }
 

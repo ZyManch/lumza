@@ -7,28 +7,30 @@
  */
 namespace LZ\Thread;
 
+use \LZ\App;
+
+
 class SimpleThread  extends Base {
 
+    protected $_id;
 
     public function run() {
-        $pid = pcntl_fork();
-        switch ($pid) {
-            case -1:
-                return null;
-            case 0:
-                $pid = $this->getId();
-                unset($this->_manager[$pid]);
-                exit($pid);
-                break;
-            default:
-                $this->_manager[$pid] = $this;
-                return $pid;
-        }
+        $pid = $this->getId();
+        $this->_manager[$pid] = $this;
+        return $pid;
     }
 
+    public function addApplication(App\Base $app) {
+        parent::addApplication($app);
+        $app->run();
+        $this->stop();
+    }
 
     public function getId() {
-        return getmypid();
+        if (is_null($this->_id)) {
+            $this->_id = uniqid();
+        }
+        return $this->_id;
     }
 
 }

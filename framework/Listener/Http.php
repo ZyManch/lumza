@@ -9,74 +9,76 @@ namespace LZ\Listener;
 
 use LZ\Exception;
 use LZ\Request;
+use LZ\Module\Socket;
 
 class Http extends Base {
 
+    /** @var  Socket\Server */
     protected $_socket;
 
     protected $_read;
 
     protected $_clients = array();
-    protected $_request = array();
+
+    /** @var \LZ\Request\Base[]  */
+    protected $_requests = array();
 
     public function init() {
-        $sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        if ($sock < 0) {
-            throw new Exception\Listener('Error start server');
-        }
-        $dns = $this->_getParsedDns();
-        if (!socket_bind($sock, $dns['domain'], $dns['port'])) {
-            throw new Exception\Listener('Error bind socket to '.$dns['domain'].':'.$dns['port']);
-        }
-        if (!socket_listen($sock, $this->_maxClients)) {
-            throw new Exception\Listener('Error listed port');
-        }
-        $this->_socket = $sock;
+        $this->_socket = new Socket\Server($this->_dns, $this->_maxClients);
     }
 
-    protected function _getParsedDns() {
-        $dns = explode(':',$this->_dns,2);
-        if (!isset($dns[1])) {
-            $dns[1] = 80;
-        }
-        return array(
-            'domain' => $dns[0],
-            'port' => $dns[1]
-        );
+    public function getSocket() {
+        return $this->_socket;
     }
 
     public function getNewRequest() {
+        $socket = $this->_socket->checkNewSocket();
+        if (!$socket) {
+            return null;
+        }
+        print "New request obtained\n";
+        $request = new Request\Http($socket->body);
+        $request->setSocket($socket);
+        return $request;
+    }
+
+    protected function _checkFinishedRequests(){
+        foreach ($this->_requests as $key => $request) {
+            if ($request->finished) {
+                printf("Found closed request %d: %f\n",$key, microtime(true));
+                socket_close($this->_clients[$key]);
+                unset($this->_clients[$key]);
+                unset($this->_requests[$key]);
+            }
+        }
         $this->_read = array_merge(array($this->_socket),$this->_clients);
+    }
+
+    protected function _checkNewRequest() {
         $null = null;
-        if (socket_select($this->_read, $null, $null, null) < 1) {
+        if (!socket_select($this->_read, $null, $null, null)) {
             return null;
         }
         if (!in_array($this->_socket, $this->_read)) {
             return null;
         }
+        printf("Accept new connection: %f\n",microtime(true));
         $socketNew = socket_accept($this->_socket);
         if ($socketNew === false) {
             throw new Exception\Listener(socket_strerror(socket_last_error($this->_socket)));
         }
         $requestBody = socket_read($socketNew, 1024);
         $this->_clients[] = $socketNew;
-
-
-        $in = "HTTP/1.1 200 OK\r\n";
-        $in .= "Host: www.example.com\r\n";
-        $in .= "Connection: Close\r\n\r\n";
-
-        socket_write($socketNew, $in, strlen($in));
-        socket_write($socketNew, $requestBody, strlen($requestBody));
-        socket_close($socketNew);
-
-
+        end($this->_clients);
+        $index = key($this->_clients);
+        printf("Create new request %d: %f\n",$index, microtime(true));
         $request = new Request\Http($requestBody);
         $request->setSocket($socketNew);
+        $this->_requests[$index] = $request;
         return $request;
     }
 
-    public function checkClosedRequests() {
+    protected function _checkClosedRequests() {
         foreach ($this->_clients as $key => $client) {
             if (in_array($client, $this->_read)) {
                 $buf = @socket_read($client, 1024, PHP_NORMAL_READ);
@@ -87,7 +89,10 @@ class Http extends Base {
                 if ($buf) {
                     switch ($buf) {
                         case 'quit':
+                            print "Close connection\n";
                             unset($this->_clients[$key]);
+                            $this->_requests[$key]->finished = true;
+                            unset($this->_requests[$key]);
                             socket_close($client);
                             break;
                         case 'shutdown':

@@ -9,6 +9,7 @@ namespace LZ\Thread;
 
 class PcntlThread extends Base {
 
+    protected $_id;
 
     public function run() {
         $pid = pcntl_fork();
@@ -16,11 +17,12 @@ class PcntlThread extends Base {
             case -1:
                 return null;
             case 0:
-                $pid = $this->getId();
+                $pid = getmypid();
                 unset($this->_manager[$pid]);
                 exit($pid);
                 break;
             default:
+                $this->_id = $pid;
                 $this->_manager[$pid] = $this;
                 return $pid;
         }
@@ -28,7 +30,7 @@ class PcntlThread extends Base {
 
 
     public function getId() {
-        return getmypid();
+        return $this->_id;
     }
 
 }

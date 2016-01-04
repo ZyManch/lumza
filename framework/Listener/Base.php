@@ -23,6 +23,4 @@ abstract class Base {
 
     abstract function getNewRequest();
 
-    abstract function checkClosedRequests();
-
 }

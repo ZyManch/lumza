@@ -5,10 +5,11 @@
  * Date: 30.12.2015
  * Time: 15:06
  */
-namespace LZ\Application;
+namespace LZ\App;
 
 class Base  {
 
+    /** @var \LZ\Request\Base  */
     protected $_request;
 
     public function __construct(\LZ\Request\Base $request) {
@@ -17,7 +18,9 @@ class Base  {
 
 
     public function run() {
-
+        sleep(1);
+        $this->_request->sendBody(var_export($this->_request->server,1));
+        $this->_request->finish();
     }
 
 }

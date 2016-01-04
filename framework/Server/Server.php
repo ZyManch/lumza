@@ -7,7 +7,7 @@
  */
 namespace LZ\Server;
 
-use LZ\Application\Base;
+use LZ\App\Base;
 use LZ\Listener;
 use LZ\Thread\Manager;
 
@@ -31,8 +31,6 @@ class Server {
                 $thread = $this->_threadManager->getFreeThread();
                 $thread->addApplication($app);
             }
-            $this->_listener->checkClosedRequests();
-            sleep(1);
         }
     }
 
