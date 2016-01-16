@@ -20,8 +20,8 @@ class Http {
     public $body;
 
     public function __construct($socket){
-        socket_set_block($socket);
         $this->_socket = $socket;
+        socket_set_nonblock($this->_socket);
         $this->updateStatus();
     }
 
@@ -29,16 +29,15 @@ class Http {
         if ($this->closed) {
             return;
         }
-        $read = array($this->_socket);
+        $null = array();
         $write = array($this->_socket);
-        if (!socket_select($read, $write, $null, null)) {
+        print "Checking selects\n";
+        if (!socket_select($null, $write, $null, null)) {
             throw new Exception\Socket(socket_strerror(socket_last_error($this->_socket)));
         }
+        print "Result ".($write?1:0)."\n";
         $this->writable = sizeof($write)>0;
-        $this->body = null;
-        if (sizeof($read)>0) {
-            $this->_read();
-        }
+        $this->_read();
     }
 
     public function write($body){
@@ -49,31 +48,30 @@ class Http {
     }
 
     protected function _read(){
-        print "Start read socket\n";
-        $empty
-        while($buf = socket_read($this->_socket, 1024, PHP_NORMAL_READ)) {
-            print $buf."|\n";
-            if ($buf === false) {
-                throw new Exception\Listener(socket_strerror(socket_last_error($this->_socket)));
-            } else if ($buf) {
-                switch ($buf) {
-                    case 'quit':
-                        print "Close connection\n";
-                        socket_close($this->_socket);
-                        break;
-                    case 'shutdown':
-                        throw new Exception\Listener('Shutdown detected');
-                    default:
-                        $this->body.=$buf;
-                }
+        $this->body = null;
+        do {
+            print "Read block:";
+            $buf = socket_read($this->_socket, 10, PHP_BINARY_READ);
+            switch ($buf) {
+                case 'quit':
+                    $this->close();
+                    break;
+                case 'shutdown':
+                    throw new Exception\Listener('Shutdown detected');
+                default:
+                    $this->body.=$buf;
             }
-        }
-        print "Finish read socket\n";
+            print strlen($buf).":".$buf."\n";
+            if (substr($buf, -4)=="\r\n\r\n") {
+                break;
+            }
+        } while (trim($buf));
     }
 
     public function close() {
         if (!$this->closed) {
             $this->closed = true;
+            $this->writable = false;
             if ($this->_socket) {
                 socket_close($this->_socket);
                 $this->_socket = null;

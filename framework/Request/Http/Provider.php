@@ -5,13 +5,13 @@
  * Date: 23.12.2015
  * Time: 13:13
  */
-namespace LZ\Listener;
+namespace LZ\Request\Http;
 
 use LZ\Exception;
-use LZ\Request;
+use LZ\Request\Base;
 use LZ\Module\Socket;
 
-class Http extends Base {
+class Provider extends Base\Provider {
 
     /** @var  Socket\Server */
     protected $_socket;
@@ -20,7 +20,7 @@ class Http extends Base {
 
     protected $_clients = array();
 
-    /** @var \LZ\Request\Base[]  */
+    /** @var Request[]  */
     protected $_requests = array();
 
     public function init() {
@@ -37,7 +37,7 @@ class Http extends Base {
             return null;
         }
         print "New request obtained\n";
-        $request = new Request\Http($socket->body);
+        $request = new Request($socket->body);
         $request->setSocket($socket);
         return $request;
     }
@@ -72,7 +72,7 @@ class Http extends Base {
         end($this->_clients);
         $index = key($this->_clients);
         printf("Create new request %d: %f\n",$index, microtime(true));
-        $request = new Request\Http($requestBody);
+        $request = new Request($requestBody);
         $request->setSocket($socketNew);
         $this->_requests[$index] = $request;
         return $request;
@@ -102,13 +102,6 @@ class Http extends Base {
             }
         }
         return true;
-    }
-
-    public function __destruct() {
-        foreach($this->_clients as $client) {
-            socket_close($client);
-        }
-        socket_close($this->_socket);
     }
 
 

@@ -5,14 +5,22 @@
  * Date: 23.12.2015
  * Time: 15:50
  */
-namespace LZ\Request;
+namespace LZ\Request\Base;
 
-abstract class Base {
+use LZ\Engine\Events;
+
+abstract class Request {
+
+    const E_OPEN = 'open';
+    const E_CLOSE = 'close';
 
     public $path;
     public $post  = array();
     public $get   = array();
     public $files = array();
+
+    public $time_limit = 10;
+    public $started;
 
 
     protected $_canSendHeader = true;
@@ -90,6 +98,7 @@ abstract class Base {
     );
 
     public function __construct($requestBody) {
+        Events::trigger($this,self::E_OPEN);
         $this->_body = $this->_parseBody($requestBody);
     }
 
@@ -102,5 +111,9 @@ abstract class Base {
     abstract protected function _parseBody($requestBody);
 
     abstract public function finish();
+
+    public function __destruct() {
+        Events::trigger($this,self::E_CLOSE);
+    }
 
 }

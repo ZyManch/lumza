@@ -5,9 +5,9 @@
  * Date: 23.12.2015
  * Time: 13:13
  */
-namespace LZ\Listener;
+namespace LZ\Request\Base;
 
-abstract class Base {
+abstract class Provider {
 
     protected $_dns;
 

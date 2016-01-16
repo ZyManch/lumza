@@ -57,4 +57,7 @@ class Server {
         return new Http($socketNew);
     }
 
+    public function __destruct() {
+        socket_close($this->_socket);
+    }
 }

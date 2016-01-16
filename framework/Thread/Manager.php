@@ -34,8 +34,17 @@ class Manager implements \Countable, \ArrayAccess {
         } else {
             $thread = new SimpleThread($this);
         }
+        $this->_threads[] = $thread;
         $thread->run();
         return $thread;
+    }
+
+    public function tick() {
+        if ($this->_isThreadIsSupported) {
+            foreach ($this->_threads as $thread) {
+                $thread->run();
+            }
+        }
     }
 
     public function stopThread($id) {
